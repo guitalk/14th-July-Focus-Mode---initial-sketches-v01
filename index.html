@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Focus Mode — Lo-fi Wireframe (for discussion)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+  body { background: #e8e8e8; padding: 16px; color: #333; }
+
+  /* wireframe controls */
+  .wf-bar { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+  .wf-bar span { font-size:12px; color:#777; text-transform:uppercase; letter-spacing:.5px; }
+  .wf-bar button { padding:6px 14px; border:1px solid #999; background:#fff; cursor:pointer; font-size:13px; border-radius:4px; }
+  .wf-bar button.active { background:#333; color:#fff; }
+
+  .frame { background:#fff; border:2px solid #bbb; border-radius:8px; overflow:hidden; max-width:1400px; margin:0 auto; }
+
+  /* header */
+  .hdr { background:#4a4a4a; color:#fff; padding:12px 20px; display:flex; justify-content:space-between; align-items:center; }
+  .hdr .left { display:flex; gap:12px; align-items:center; font-size:15px; }
+  .hdr .right { font-size:13px; opacity:.85; }
+
+  .body { display:flex; min-height:640px; }
+  .main { flex:1; padding:20px; min-width:0; }
+  .panel { border-left:2px dashed #ccc; background:#fafafa; padding:16px; transition:width .2s; }
+
+  /* live: panel 30% | post: panel 40% */
+  .live .panel { width:30%; }
+  .post .panel { width:40%; }
+
+  /* mode toggle (Notes / AI Summary) */
+  .mode-toggle { display:inline-flex; border:1px solid #aaa; border-radius:6px; overflow:hidden; margin-bottom:14px; }
+  .mode-toggle div { padding:7px 18px; font-size:13px; background:#f2f2f2; }
+  .mode-toggle div.on { background:#555; color:#fff; }
+  .mode-toggle div.disabled { color:#bbb; position:relative; }
+
+  .ghost { background:#eee; border-radius:4px; }
+  .line { height:10px; margin:8px 0; }
+  .w90{width:90%} .w75{width:75%} .w60{width:60%} .w40{width:40%} .w25{width:25%}
+
+  .box { border:1px dashed #aaa; border-radius:6px; padding:12px 14px; margin-bottom:12px; background:#fff; }
+  .box h4 { font-size:12px; text-transform:uppercase; letter-spacing:.5px; color:#666; margin-bottom:8px; }
+
+  .badge { display:inline-block; font-size:11px; padding:3px 10px; border-radius:10px; background:#ddd; color:#444; margin-right:6px; }
+  .badge.src { background:#d9d9f2; }
+  .badge.you { background:#fff3c4; }
+
+  .action-row { display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border:1px solid #ddd; border-radius:5px; margin:6px 0; font-size:13px; color:#555; }
+  .action-row button { border:1px solid #888; background:#fff; padding:4px 10px; font-size:12px; cursor:pointer; border-radius:4px; white-space:nowrap; }
+  .action-row.logged { background:#eef7ee; }
+  .action-row.logged button { border:none; background:none; color:#3a7d3a; cursor:default; }
+
+  /* annotations */
+  .q { display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; background:#f5c518; color:#333; border-radius:50%; font-size:11px; font-weight:700; cursor:help; margin-left:6px; vertical-align:middle; }
+  .legend { max-width:1400px; margin:14px auto 0; font-size:13px; color:#555; background:#fffbe8; border:1px solid #e8d98a; border-radius:6px; padding:12px 16px; }
+  .legend b { display:block; margin-bottom:6px; }
+  .legend li { margin:4px 0 4px 18px; }
+
+  /* panel tabs */
+  .tabs { display:flex; gap:4px; margin-bottom:12px; flex-wrap:wrap; }
+  .tabs div { padding:6px 12px; font-size:12px; border:1px solid #ccc; border-bottom:none; border-radius:5px 5px 0 0; background:#eee; cursor:pointer; }
+  .tabs div.on { background:#fff; font-weight:600; }
+
+  .note-card { border:1px solid #ddd; border-radius:5px; padding:10px; margin-bottom:8px; background:#fff; }
+  .note-card .meta { font-size:11px; color:#999; margin-top:6px; }
+
+  /* insights */
+  .big { font-size:34px; font-weight:700; color:#555; }
+  .bar { display:flex; align-items:center; gap:8px; font-size:12px; color:#666; margin:6px 0; }
+  .bar .track { flex:1; height:8px; background:#eee; border-radius:4px; overflow:hidden; }
+  .bar .fill { height:100%; background:#999; }
+  .bar .pct { width:34px; text-align:right; }
+  .evi { font-size:12px; color:#777; border-left:3px solid #ccc; padding:6px 10px; margin:6px 0; background:#f7f7f7; }
+  .linkish { font-size:12px; color:#666; text-decoration:underline; cursor:pointer; }
+
+  .footer-row { display:flex; align-items:center; gap:16px; margin-top:16px; }
+  .save { background:#888; color:#fff; border:none; padding:8px 22px; border-radius:5px; }
+  .muted { font-size:12px; color:#999; }
+  .hide { display:none !important; }
+  .callout { font-size:12px; color:#856404; background:#fff3cd; border:1px solid #ffeeba; border-radius:5px; padding:8px 10px; margin-bottom:12px; }
+</style>
+</head>
+<body>
+
+<div class="wf-bar">
+  <span>Wireframe state:</span>
+  <button id="btnLive" class="active" onclick="setState('live')">During live session</button>
+  <button id="btnPost" onclick="setState('post')">After session (transcript synced)</button>
+  <span style="text-transform:none">— same surface, two states. Not final UI.</span>
+</div>
+
+<div class="frame">
+  <div class="hdr">
+    <div class="left"><span>&#8592;</span><span>Engagement 1 : Session Name</span></div>
+    <div class="right" id="hdrRight">Capture Notes &#9662;</div>
+  </div>
+
+  <div class="body live" id="surface">
+
+    <!-- ===================== MAIN (left) ===================== -->
+    <div class="main">
+
+      <div class="mode-toggle" id="modeToggle">
+        <div class="on" id="tNotes">My Notes</div>
+        <div class="disabled" id="tAI">AI Summary <span class="q" title="Q: Toggle exists in all three views, or only Focus Mode?">?</span></div>
+      </div>
+
+      <!-- LIVE STATE -->
+      <div id="liveMain">
+        <div class="callout">AI Summary is disabled during the session — no in-call recording (confidentiality). It unlocks when the external transcript syncs.</div>
+        <div class="box">
+          <h4>Use Template</h4>
+          <div class="ghost line w40"></div>
+        </div>
+        <div class="box" style="min-height:300px">
+          <h4>Note (manual capture — keywords are fine)</h4>
+          <div class="ghost line w60"></div>
+          <div class="ghost line w75"></div>
+          <div class="ghost line w40"></div>
+          <div class="muted" style="margin-top:12px">Whatever the coach types here is preserved as-is and expanded by AI later (Granola pattern).</div>
+        </div>
+        <div class="footer-row">
+          <button class="save">Save</button>
+          <span class="muted">Always pin this at the top [toggle]</span>
+        </div>
+      </div>
+
+      <!-- POST STATE -->
+      <div id="postMain" class="hide">
+        <div class="box">
+          <span class="badge src">Source: Otter.ai &middot; synced 4:12 PM</span>
+          <span class="badge">Session 4 &middot; 16 May</span>
+          <span class="q" title="Source badge: today Otter/Read.ai/Fireflies, tomorrow native — placement to be agreed">?</span>
+        </div>
+
+        <div class="box">
+          <h4>Summary <span class="badge you">your words kept as-is</span></h4>
+          <div class="ghost line w90"></div>
+          <div class="ghost line w75"></div>
+          <span class="badge you">coach keyword</span> <span class="muted">→ AI expanded this into the paragraph below</span>
+          <div class="ghost line w90" style="margin-top:8px"></div>
+          <div class="ghost line w60"></div>
+        </div>
+
+        <div class="box">
+          <h4>Session Highlights (dynamic block)</h4>
+          <div class="ghost line w90"></div>
+          <div class="ghost line w75"></div>
+        </div>
+
+        <div class="box">
+          <h4>Risks Identified (dynamic block)</h4>
+          <div class="ghost line w75"></div>
+          <div class="ghost line w60"></div>
+        </div>
+
+        <div class="box">
+          <h4>Next Actions (dynamic block)</h4>
+          <div class="action-row"><span>AI-suggested action item text …</span><button onclick="this.parentNode.classList.add('logged'); this.textContent='✓ Logged to Actions'">Log as action</button></div>
+          <div class="action-row"><span>Another suggested next step …</span><button onclick="this.parentNode.classList.add('logged'); this.textContent='✓ Logged to Actions'">Log as action</button></div>
+          <div class="action-row logged"><span>Previously logged item …</span><button>✓ Logged to Actions</button></div>
+          <div class="muted" style="margin-top:6px">Manual note lines can also be promoted to actions (select text → "Make action").</div>
+        </div>
+
+        <div class="box" style="border-style:dotted; color:#999">
+          + template-defined blocks (e.g., Competitors) — coach configures per note template
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== PANEL (right) ===================== -->
+    <div class="panel">
+
+      <!-- LIVE PANEL -->
+      <div id="livePanel">
+        <div class="tabs">
+          <div class="on">Previous Notes</div><div>Goals</div><div>Open Actions</div><div>Message Client</div>
+        </div>
+        <div class="ghost line w60" style="height:28px"></div>
+        <div class="note-card"><div class="ghost line w90"></div><div class="ghost line w75"></div><div class="meta">pinned &middot; 2:34pm</div></div>
+        <div class="note-card"><div class="ghost line w90"></div><div class="ghost line w60"></div><div class="meta">2:34pm</div></div>
+        <div class="note-card"><div class="ghost line w75"></div><div class="meta">2:34pm</div></div>
+        <div class="muted">~30% width. No AI content during the session.</div>
+      </div>
+
+      <!-- POST PANEL -->
+      <div id="postPanel" class="hide">
+        <div class="tabs">
+          <div class="on">Smart Insights <span class="q" title="Q: do insights live in this panel, or on a separate session review page? Panel widens 30%→40% here — to be agreed">?</span></div>
+          <div>Previous Notes</div><div>Goals</div><div>Actions</div>
+        </div>
+
+        <div class="box">
+          <h4>Overall Engagement</h4>
+          <div class="big">-- %</div>
+          <div class="bar"><span style="width:90px">Dynamics</span><div class="track"><div class="fill" style="width:76%"></div></div><span class="pct">--%</span></div>
+          <div class="bar"><span style="width:90px">Cognitive</span><div class="track"><div class="fill" style="width:77%"></div></div><span class="pct">--%</span></div>
+          <div class="bar"><span style="width:90px">ICF Markers</span><div class="track"><div class="fill" style="width:80%"></div></div><span class="pct">--%</span></div>
+          <div class="bar"><span style="width:90px">Working Alliance</span><div class="track"><div class="fill" style="width:81%"></div></div><span class="pct">--%</span></div>
+        </div>
+
+        <div class="box">
+          <h4>Client: ICAP / Readiness to change</h4>
+          <div class="bar"><span style="width:90px">Passive</span><div class="track"><div class="fill" style="width:16%"></div></div><span class="pct">--%</span></div>
+          <div class="bar"><span style="width:90px">Active</span><div class="track"><div class="fill" style="width:25%"></div></div><span class="pct">--%</span></div>
+          <div class="bar"><span style="width:90px">Constructive</span><div class="track"><div class="fill" style="width:30%"></div></div><span class="pct">--%</span></div>
+          <div class="bar"><span style="width:90px">Interactive</span><div class="track"><div class="fill" style="width:31%"></div></div><span class="pct">--%</span></div>
+        </div>
+
+        <div class="box">
+          <h4>ICF Markers &amp; Evidence</h4>
+          <div style="font-size:13px; color:#555">4.1 Trust and safety</div>
+          <div class="evi">"…transcript quote as evidence…" <span class="linkish">view in transcript</span></div>
+          <div style="font-size:13px; color:#555">6.1 Active listening</div>
+          <div class="evi">"…transcript quote as evidence…"</div>
+          <div class="linkish" style="margin-top:8px">Open full session review →</div>
+          <div class="muted" style="margin-top:4px">Deep drill-down lives on the full-page 60/40 review, not in this panel.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="legend">
+  <b>Open questions this wireframe is built to provoke (yellow ? markers):</b>
+  <li>Does the Notes / AI Summary toggle exist in all three views (normal notes, Focus Mode, session view) or only here?</li>
+  <li>Do Smart Insights live inside this panel (30% → 40% widening shown), or only on a separate full-page session review?</li>
+  <li>Is "no AI during live session" the agreed rule, or does Kiran expect something live in Phase 1?</li>
+  <li>Fallback when no transcript arrives: post-session state = manual notes only, AI blocks absent. OK?</li>
+  <li>Source badge placement &amp; behavior when native ("Maya"?) notetaker replaces external tools.</li>
+</div>
+
+<script>
+function setState(s) {
+  const live = s === 'live';
+  document.getElementById('surface').className = 'body ' + s;
+  document.getElementById('btnLive').className = live ? 'active' : '';
+  document.getElementById('btnPost').className = live ? '' : 'active';
+  document.getElementById('liveMain').classList.toggle('hide', !live);
+  document.getElementById('postMain').classList.toggle('hide', live);
+  document.getElementById('livePanel').classList.toggle('hide', !live);
+  document.getElementById('postPanel').classList.toggle('hide', live);
+  document.getElementById('hdrRight').textContent = live ? 'Capture Notes ▾' : 'Session Review ▾';
+  const tN = document.getElementById('tNotes'), tA = document.getElementById('tAI');
+  if (live) { tN.className='on'; tA.className='disabled'; tA.innerHTML='AI Summary 🔒 <span class="q" title="Unlocks after transcript syncs">?</span>'; }
+  else { tN.className=''; tA.className='on'; tA.innerHTML='AI Summary <span class="q" title="Q: Toggle exists in all three views, or only Focus Mode?">?</span>'; }
+}
+</script>
+</body>
+</html>
